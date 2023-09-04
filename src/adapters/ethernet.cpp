@@ -20,9 +20,10 @@ bool Ethernet::DisableEthernetConnection()
         result = GetAdaptersInfo(adapterInfo, &adapterInfoSize);
     }
     if (result != NO_ERROR) {
-        // handle error
+        std::string error = "GetAdaptersInfo failed with error: " + std::to_string(result);
+        throw WlanException(error.c_str());
     }
-    std::string ifName = "Ethernet"; // default interface name
+    std::string ifName = "Ethernet";
     for (PIP_ADAPTER_INFO adapter = adapterInfo; adapter != nullptr; adapter = adapter->Next) {
         std::string sIfName(adapter->AdapterName);
         if (sIfName.find(ifName) != std::string::npos) {
@@ -32,7 +33,6 @@ bool Ethernet::DisableEthernetConnection()
     }
     free(adapterInfo);
 
-    // Get the interface index of the Ethernet interface
     MIB_IFTABLE* ifTable = nullptr;
     DWORD ifTableSize = 0;
     result = GetIfTable(ifTable, &ifTableSize, false);
@@ -41,7 +41,8 @@ bool Ethernet::DisableEthernetConnection()
         result = GetIfTable(ifTable, &ifTableSize, false);
     }
     if (result != NO_ERROR) {
-        // handle error
+        std::string error = "GetIfTable failed with error: " + std::to_string(result);
+        throw WlanException(error.c_str());
     }
     DWORD ifIndex = 0;
     for (DWORD i = 0; i < ifTable->dwNumEntries; i++) {
@@ -55,13 +56,13 @@ bool Ethernet::DisableEthernetConnection()
     }
     free(ifTable);
 
-    // Disable the Ethernet interface
     MIB_IFROW ifRow;
     ifRow.dwIndex = ifIndex;
     ifRow.dwAdminStatus = IF_ADMIN_STATUS_DOWN;
     result = SetIfEntry(&ifRow);
     if (result != NO_ERROR) {
-        // handle error
+        std::string error = "SetIfEntry failed with error: " + std::to_string(result);
+        throw WlanException(error.c_str());
     }
     return true;
 }
