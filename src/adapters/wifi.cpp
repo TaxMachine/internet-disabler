@@ -1,12 +1,18 @@
-#include <iostream>
+//
+// Created by TaxMachine on 2023-09-03.
+//
 
-#include <windows.h>
+#include "wifi.hpp"
+
 #include <wlanapi.h>
-#include <cstdlib>
+#include <string>
+
+#include "../WlanException.hpp"
 
 #pragma comment(lib, "wlanapi.lib")
 
-GUID GetWlanInterfaceGuid() {
+
+GUID Wifi::GetCurrentWifiGuid() {
     HANDLE hClient = nullptr;
     DWORD dwMaxClient = 2;
     DWORD dwCurVersion = 0;
@@ -15,17 +21,16 @@ GUID GetWlanInterfaceGuid() {
     dwResult = WlanOpenHandle(dwMaxClient, nullptr, &dwCurVersion, &hClient);
     if (dwResult != ERROR_SUCCESS)
     {
-        std::cout << "WlanOpenHandle failed with error: " << dwResult << std::endl;
-        return {};
+        std::string error = "WlanOpenHandle failed with error: " + std::to_string(dwResult);
+        throw WlanException(error.c_str());
     }
 
     PWLAN_INTERFACE_INFO_LIST pIfList = nullptr;
     dwResult = WlanEnumInterfaces(hClient, nullptr, &pIfList);
     if (dwResult != ERROR_SUCCESS)
     {
-        std::cout << "WlanEnumInterfaces failed with error: " << dwResult << std::endl;
-        WlanCloseHandle(hClient, nullptr);
-        return {};
+        std::string error = "WlanEnumInterfaces failed with error: " + std::to_string(dwResult);
+        throw WlanException(error.c_str());
     }
 
     GUID networkGuid = GUID();
@@ -42,7 +47,7 @@ GUID GetWlanInterfaceGuid() {
 }
 
 
-bool DisableWifiConnection(const GUID& guid) {
+bool Wifi::DisableWifiConnection(const GUID& guid) {
     HANDLE hClient = nullptr;
     DWORD dwMaxClient = 2;
     DWORD dwCurVersion = 0;
@@ -51,24 +56,17 @@ bool DisableWifiConnection(const GUID& guid) {
     dwResult = WlanOpenHandle(dwMaxClient, nullptr, &dwCurVersion, &hClient);
     if (dwResult != ERROR_SUCCESS)
     {
-        std::cout << "WlanOpenHandle failed with error: " << dwResult << std::endl;
-        return false;
+        std::string error = "WlanOpenHandle failed with error: " + std::to_string(dwResult);
+        throw WlanException(error.c_str());
     }
 
     dwResult = WlanDisconnect(hClient, const_cast<GUID*>(&guid), nullptr);
     if (dwResult != ERROR_SUCCESS)
     {
-        std::cout << "WlanDisconnect failed with error: " << dwResult << std::endl;
-        WlanCloseHandle(hClient, nullptr);
-        return false;
+        std::string error = "WlanDisconnect failed with error: " + std::to_string(dwResult);
+        throw WlanException(error.c_str());
     }
 
     WlanCloseHandle(hClient, nullptr);
     return true;
-}
-
-
-int main() {
-    GUID guid = GetWlanInterfaceGuid();
-    DisableWifiConnection(guid);
 }
