@@ -50,14 +50,11 @@ jobs:
         - name: Download release binary (x64)
           uses: actions/download-artifact@v3
           with:
-            name: internetdisabler
+            name: internet_disabler
             path: build
-        - name: Zip binaries
-          run: zip -9 ../internetdisabler.zip internetdisabler.exe
-          working-directory: ./build
         - name: Release
           uses: softprops/action-gh-release@v1
           with:
             draft: true
-            files: internetdisabler.zip
+            files: internet_disabler.exe
             name: Internet Disabler ${{ github.ref_name }}
